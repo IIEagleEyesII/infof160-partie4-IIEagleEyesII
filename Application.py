@@ -1,40 +1,39 @@
 import sys
-from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton, QLabel, QVBoxLayout, QHBoxLayout, QWidget
+from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton, QLabel, QVBoxLayout, QHBoxLayout, QWidget,QComboBox,QComboBox,QGroupBox
 from PyQt5 import QtGui, QtCore
-from PyQt5.QtWidgets import QComboBox,QGroupBox
 from PyQt5.QtGui import QIcon, QPainter, QPen, QBrush, QFont, QPalette
-from PyQt5.QtCore import pyqtSlot , Qt
+from PyQt5.QtCore import pyqtSlot , QObject
 from players import MinimaxAiPlayer, HumanPlayer
 from breakthrough import Breakthrough
-import buttons
-import labels
-import choix_jeux
-import buttons
-import labels
-import choix_jeux
+import time as t
+from PyQt5.QtCore import Qt
 
 class App(QWidget):
-
-    def __init__ ( self ):
+    '''Class app  affiche l'interface graphic qui comporte:
+     un combo box : — le choix d’un joueur humain ou IA (MCTS, Minimax...) pour chaque joueur ;
+     un Qdial
+     '''
+    def __init__ ( self,matrice = [[1, 1, 1, 1, 1,1,1], [1, 1, 1, 1, 1,1,1], [0, 0, 0, 0, 0,0,0], [0, 0, 0, 0, 0,0,0], [0, 0, 0, 0, 0,0,0], [2,2,2, 2, 2, 2, 2], [2,2,2, 2, 2, 2, 2]] ):
+        self.matrice = matrice
         super (). __init__ ()
-        self . title = "INFO F-106"
-        self . left = 500
+        self . title = "INFO F-106 Breakthrough game"
+        self . left = 540
         self . top = 100
-        self . width = 1000
-        self . height = 700
+        self . width = 1050
+        self . height = 900
         self . initUI ()
+
 
     def initUI ( self ):
         self . setWindowTitle ( self . title )
         self . setGeometry ( self.left , self.top , self .width , self . height )
 
-
-
         # Set window background color
         self.setAutoFillBackground(True)
         p = self.palette()
-        p.setColor(self.backgroundRole(), Qt.gray)
+        p.setColor(self.backgroundRole(), Qt.gray )
         self.setPalette(p)
+        self.labels()
 
         #creation d'un petit rectangle
         self.createHorizontalLayout()
@@ -42,33 +41,71 @@ class App(QWidget):
         windowLayout.addWidget(self.horizontalGroupBox)
         self.setLayout(windowLayout)
 
-        comboBox = choix_jeux.comboBox(self)
-
-        button = buttons.add_button(self)
-
-        # slide = internet.slide(self)
+        self.comboBox()
         self.create_widgets()
+        self.bouttons()
+
 
         self.show()
 
-    @pyqtSlot()
-    def on_click1(self):
-        buttons.on_click1(self)
+
+    def click_charger(self):
+        '''Charger la matrice '''
+
+
+    def click_start(self):
+        '''commencer la partie'''
+        #Breakthrough().play()
+
+    def bouttons(self):
+        change_button = QPushButton('Charger', self)
+        change_button.setGeometry(30, 200, 80, 30)
+        change_button.clicked.connect(self.click_charger)
+
+        start_button = QPushButton('Commencer', self)
+        start_button.setGeometry(20, 800, 1000, 30)
+        start_button.clicked.connect(self.click_start)
+
+
+    def comboBox(self):
+        combo_joueur1 = QComboBox(self)
+        combo_joueur1.setGeometry(110, 60, 850, 30)
+        combo_joueur1.addItems(["Minimax", "Joueur humain"])
+        # combo.setFont()
+
+        combo_joueur2 = QComboBox(self)
+        combo_joueur2.setGeometry(110, 100, 850, 30)
+        combo_joueur2.addItems(["Minimax", "Joueur humain"])
 
     def paintEvent(self, event):
         painter = QPainter(self)
         painter.setPen(QPen(Qt.black ))
-        painter.drawRect( int((self.left * 3)/50) , int((self.top * 2)/5) , int((self.width * 47)/50) , int((self.height * 3)/14))
+        painter.drawRect(int((self.left * 3)/50) , int((self.top * 2)/5) , int((self.width * 47)/50) , int((self.height * 3)/14))
 
-    @pyqtSlot()
-    def on_click(self):
-        buttons.on_click(self)
+    def labels(self):
+        player1_label = QLabel("Joueur 1:", self)
+        player1_label.move(50, 60)
+
+        player2_label = QLabel("Joueur 2:", self)
+        player2_label.move(50, 100)
+        # label2.setFont(QFont("Helvetica",  18)) permets d'augmenter la taille du font
+
+        player3_label = QLabel("Délai de l'IA: ", self)
+        player3_label.move(50, 140)
+
+        info_label = QLabel("Bonjour: ", self)
+        info_label.move(100, 250)
 
     def createHorizontalLayout(self):
         self.horizontalGroupBox = QGroupBox("Parameters")
 
     def foo(self, s):
-        print(s)
+        '''Une fonction qui prends une matrice en parametre et renvoie une autre matrice qui contiens des differents strings avec tel que :
+        string[0]= position selon x ,string[1] = position selon y
+        if len(string) == 2 : la case contient 0 donc aucun pion
+        if len(string) == 4 : la case contient 1 donc aucun pion blanc
+        if len(string) == 6 : la case contient 0 donc aucun pion noir
+        '''
         le = len(s)
         l = []
         for i in range(le):
@@ -82,10 +119,12 @@ class App(QWidget):
                     l[i].append((string) * 2)
                 else:
                     l[i].append((string) * 3)
-        l = [[l[j][i] for j in range(len(l))] for i in range(len(l[0]) - 1, -1, -1)]
+        l = [[l[j][i] for j in range(len(l))] for i in range(len(l[0]) - 1, -1, -1)] #une rotation de 90deg de la matrice pour l'afficher correctement
         return l
 
     def check(self, c):
+        '''Fonction pour placer les icones foncées et claires dans leurs places
+        returns float (foncée) , int(claire) '''
         if len(c) == 2:
             if (int(c[0]) + int(c[1])) % 2 == 0:
                 res = 0.0
@@ -104,10 +143,8 @@ class App(QWidget):
         return res
 
     def create_widgets(self):
-        s = self.foo([[1,2,1,2,0],[1,1,1,1,1],[0,0,0,0,0],[2,2,2,2,2],[1,2,1,2,0]])
-        # print(s)
+        s = self.foo(self.matrice)
         for l in s:
-            print(l)
             for string in l:
                 self.string = string
                 if self.check(string) == 0:
@@ -137,10 +174,49 @@ class App(QWidget):
                         self.string = QPushButton("", self)
                         self.string.setIcon(QtGui.QIcon(
                             '/Users/souadbouterfass/Desktop/infof160-partie4-IIEagleEyesII/white light.png'))
-                self.string.setGeometry(400 + (s.index(l) * 50), 300 + (l.index(string) * 50), 50, 50)
+                self.string.setGeometry(330 + (s.index(l) * 50), 290 + (l.index(string) * 50), 50, 50)
                 self.string.setIconSize(QtCore.QSize(50, 50))
 
 
+if __name__ == "__main__":
+    app = QApplication(sys.argv)
+    ex = App()
+    sys.exit(app.exec_())
+
+
+
+
+
+
+
+
+
+
+
+
+
+''' def creat_grid(self, board):
+    for i in range(board.getlines):
+        line = QWidget()
+        line.setLayout(QHBoxLayout())
+        line.layout().setSpacing(0)
+        line.layout().setContentsMargins(0, 0, 0, 0)
+        for j in range(board.getcols):
+            new_square = QPushButton()
+            new_square.clicked.connect(partial(self.grid_button_click(i, j)))
+            new_square.setFixedSize(self.grid_width // board.getcols, self.grid_height // board.getlines)
+            new_square.setStyleSheet("background-color: lightgreen" if (i + j) % 2 else "background-color: green")
+        square_data = board.get.getSquaredata(((i, j)))
+        if square_data == 1:
+            new_square.setIcon("graphic pion blanc.png")
+        if square_data == 2:
+            new_square.setIcon("graphic pion noir.png")
+        new_square.setIconSize(50, 50, 50, 50)
+        board.setButton((i, j), new_square)
+        line.Layout().addWidget(new_square)
+    self.Layout.addWidget(line)'''
+
+'''
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
@@ -163,6 +239,9 @@ class MainWindow(QMainWindow):
         self.statusBar().showMessage('Message in statusbar.')
         self.create_widgets()
         self.show()
+
+  
+
 
     def create_widget(self):
 
@@ -214,7 +293,6 @@ class MainWindow(QMainWindow):
         self.player = 2
         self.opponentID = 1
 
-
     def foo(self,s):
         print(s)
         le = len(s)
@@ -251,9 +329,6 @@ class MainWindow(QMainWindow):
                 res = 2.0
         return res
 
-
-
-
     def create_widgets(self):
         s = self.foo(self.matrix)
         #print(s)
@@ -282,21 +357,18 @@ class MainWindow(QMainWindow):
                     else :
                         self.string = QPushButton("", self)
                         self.string.setIcon(QtGui.QIcon('/Users/souadbouterfass/Desktop/infof160-partie4-IIEagleEyesII/white light.png'))
-                self.string.setGeometry(100 + (s.index(l) * 50), 100 + (l.index(string) * 50), 50, 50)
+                self.string.setGeometry(50 + (s.index(l) * 50), 100 + (l.index(string) * 50), 50, 50)
                 self.string.setIconSize(QtCore.QSize(50, 50))
 
 
-"""app = QApplication(sys.argv)
+app = QApplication(sys.argv)
 
 window = MainWindow()
 window.show()
 
 sys.exit(app.exec())
-"""
+'''
 
-if __name__ == "__main__" :
-    app = QApplication(sys.argv)
-    ex = App()
-    sys.exit ( app.exec_ ())
+
 
 #l = [[1,2,1,2,0],[1,1,1,1,1],[0,0,0,0,0],[2,2,2,2,2],[1,2,1,2,0]]

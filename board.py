@@ -57,6 +57,10 @@ class Board:
         ]
         self.history_ = []
 
+    def getcols(self):
+        return self.n
+    def getlines(self):
+        return self.m
 
     @property
     def m(self):
